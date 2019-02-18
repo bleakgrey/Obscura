@@ -9,6 +9,7 @@ import android.view.View
 import bleakgrey.obscura.BuildConfig
 import bleakgrey.obscura.Prefs
 import bleakgrey.obscura.R
+import bleakgrey.obscura.accounts.InstanceManager
 import bleakgrey.obscura.api.Client
 import bleakgrey.obscura.api.FederationAPI
 import kotlinx.android.synthetic.main.activity_add_instance.*
@@ -17,9 +18,9 @@ import kotlinx.coroutines.NonCancellable.cancel
 
 class AddInstanceActivity : AppCompatActivity() {
 
-    var domain: String = ""
-    lateinit var client: Client
-    lateinit var api: FederationAPI
+    private var domain: String = ""
+    private lateinit var client: Client
+    private lateinit var api: FederationAPI
 
     private val oauthRedirectUri: String
         get() {
@@ -107,7 +108,15 @@ class AddInstanceActivity : AppCompatActivity() {
         if(token.data.isEmpty())
             return setError("No token received")
 
-        Log.i("AUTH", "TOKEN RECEIVED!!!!! ${token.data}")
+        Log.i("AUTH", "Testing received token")
+        val accessToken = token.data
+        api = FederationAPI.create(domain, accessToken)
+        val profile = api.getSelfProfile().await()
+
+        Log.i("AUTH", "Token is valid")
+        InstanceManager(this).saveInstance(domain, accessToken, profile)
+        val intent = Intent(this, MainActivity::class.java)
+        startActivity(intent)
     }
 
     private suspend fun registerClient(): Client {

@@ -3,8 +3,9 @@
 	<string name="settings">Settings</string>
 
 	<string name="oauth_scheme" translatable="false">oauth2redirect</string>
-	<string name="account_name">PixelFed</string>
+	<string name="account_name">Federated Instance</string>
 	<string name="account_type">bleakgrey.obscura.account</string>
+	<string name="account_token_type">bleakgrey.obscura.token.default</string>
 
 	<string name="add_instance">Add Instance</string>
 	<string name="instance_url">Instance URL</string>
