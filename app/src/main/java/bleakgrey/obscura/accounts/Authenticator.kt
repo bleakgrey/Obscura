@@ -14,7 +14,7 @@ import android.util.Log
 import bleakgrey.obscura.R
 import bleakgrey.obscura.activities.AddInstanceActivity
 
-class AppAuthenticator(private val ctx: Context) : AbstractAccountAuthenticator(ctx) {
+class Authenticator(private val ctx: Context) : AbstractAccountAuthenticator(ctx) {
     override fun addAccount(
         response: AccountAuthenticatorResponse?,
         accountType: String?,
@@ -27,7 +27,7 @@ class AppAuthenticator(private val ctx: Context) : AbstractAccountAuthenticator(
         val intent = Intent(ctx, AddInstanceActivity::class.java)
         intent.putExtra(AddInstanceActivity.ARG_ACCOUNT_TYPE, accountType)
         intent.putExtra(AddInstanceActivity.ARG_AUTH_TYPE, authTokenType)
-        intent.putExtra(AddInstanceActivity.ARG_IS_ADDING_NEW_ACCOUNT, true)
+        intent.putExtra(AddInstanceActivity.ARG_ADDING_NEW_ACCOUNT, true)
         intent.putExtra(AccountManager.KEY_ACCOUNT_AUTHENTICATOR_RESPONSE, response)
 
         val bundle = Bundle()
@@ -35,7 +35,7 @@ class AppAuthenticator(private val ctx: Context) : AbstractAccountAuthenticator(
         return bundle
     }
 
-    private val TAG = "AppAuthenticator"
+    private val TAG = "Authenticator"
 
     @Throws(NetworkErrorException::class)
     override fun getAuthToken(
@@ -46,7 +46,7 @@ class AppAuthenticator(private val ctx: Context) : AbstractAccountAuthenticator(
     ): Bundle {
 
         val am = AccountManager.get(ctx)
-        var authToken = am.peekAuthToken(account, authTokenType)
+        val authToken = am.peekAuthToken(account, authTokenType)
 
         Log.d(TAG, "$TAG> peekAuthToken returned - $authToken")
 

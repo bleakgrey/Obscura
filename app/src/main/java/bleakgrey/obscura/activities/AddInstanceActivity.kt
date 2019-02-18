@@ -1,31 +1,155 @@
 package bleakgrey.obscura.activities
 
+import android.content.Intent
+import android.net.Uri
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
+import android.util.Log
+import android.view.View
+import bleakgrey.obscura.BuildConfig
+import bleakgrey.obscura.Prefs
 import bleakgrey.obscura.R
+import bleakgrey.obscura.api.Client
+import bleakgrey.obscura.api.FederationAPI
+import kotlinx.android.synthetic.main.activity_add_instance.*
+import kotlinx.coroutines.*
+import kotlinx.coroutines.NonCancellable.cancel
 
 class AddInstanceActivity : AppCompatActivity() {
+
+    var domain: String = ""
+    lateinit var client: Client
+    lateinit var api: FederationAPI
+
+    private val oauthRedirectUri: String
+        get() {
+            val scheme = getString(R.string.oauth_scheme)
+            val host = BuildConfig.APPLICATION_ID
+            return "$scheme://$host/"
+        }
 
     companion object {
         val ARG_ACCOUNT_TYPE = "ACCOUNT_TYPE"
         val ARG_AUTH_TYPE = "AUTH_TYPE"
         val ARG_ACCOUNT_NAME = "ACCOUNT_NAME"
-        val ARG_IS_ADDING_NEW_ACCOUNT = "IS_ADDING_ACCOUNT"
+        val ARG_ADDING_NEW_ACCOUNT = "ADDING_NEW_ACCOUNT"
+        private val OAUTH_SCOPES = "read write follow"
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        setContentView(R.layout.add_instance_login)
+        setContentView(R.layout.activity_add_instance)
+        instance.setText("fosstodon.org")
+    }
 
-//        password.setOnEditorActionListener(TextView.OnEditorActionListener { _, id, _ ->
-//            if (id == EditorInfo.IME_ACTION_DONE || id == EditorInfo.IME_NULL) {
-//                attemptLogin()
-//                return@OnEditorActionListener true
-//            }
-//            false
-//        })
+    override fun onStop() {
+        super.onStop()
+        if(!client.empty)
+            Prefs(this).saveAuthClient(client)
+    }
 
-        //email_sign_in_button.setOnClickListener { attemptLogin() }
+    override fun onStart() {
+        super.onStart()
+        client = Prefs(this).getAuthClient()
+        val uri = intent.data
+        if (uri != null && uri.toString().startsWith(oauthRedirectUri))
+            CoroutineScope(Dispatchers.Main).launch { requestToken(uri) }
+    }
+
+    private fun getValidDomain(): String {
+        return "https://" + instance.text.toString()
+    }
+
+    private fun setProgress(working: Boolean) {
+        button.isActivated = working
+        progress.visibility = if(working) View.VISIBLE else View.INVISIBLE
+    }
+
+    private fun setError(str: String) {
+        setProgress(false)
+        Log.e("AUTH", str)
+    }
+
+    @InternalCoroutinesApi
+    fun onButtonClick(v: View) {
+        CoroutineScope(Dispatchers.Main).launch {
+            setProgress(true)
+            domain = getValidDomain()
+            api = FederationAPI.create(domain)
+
+            Log.i("AUTH", "Registering client")
+            client = registerClient()
+            if (client.empty) {
+                error("No client received")
+                cancel()
+            }
+
+            Log.i("AUTH", "Requesting permission page")
+            if(!openAuthorizationURI())
+                error("No browser found")
+        }
+    }
+
+    private suspend fun requestToken(uri: Uri) {
+        setProgress(true)
+
+        domain = getValidDomain()
+        api = FederationAPI.create(domain)
+        var error = uri.getQueryParameter("error")
+        val code = uri.getQueryParameter("code")
+
+        if(code == null || code.isEmpty())
+            error = "No code received"
+        if(error != null)
+            return setError("Auth fail: $error")
+
+        val token = api.fetchOAuthToken(domain, client.id, client.secret, oauthRedirectUri, code!!).await()
+        if(token.data.isEmpty())
+            return setError("No token received")
+
+        Log.i("AUTH", "TOKEN RECEIVED!!!!! ${token.data}")
+    }
+
+    private suspend fun registerClient(): Client {
+        val client = Prefs(this).getAuthClient()
+        return if(!client.empty) {
+            Log.i("AUTH", "Using cached client data")
+            client
+        } else
+            api.registerClient(domain, getString(R.string.app_name), oauthRedirectUri, OAUTH_SCOPES, "").await()
+    }
+
+    //TODO: Do something with this
+    private fun toQueryString(parameters: Map<String, String>): String {
+        val s = StringBuilder()
+        var between = ""
+        for ((key, value) in parameters) {
+            s.append(between)
+            s.append(Uri.encode(key))
+            s.append("=")
+            s.append(Uri.encode(value))
+            between = "&"
+        }
+        return s.toString()
+    }
+
+    private fun openAuthorizationURI(): Boolean {
+        val endpoint = FederationAPI.ENDPOINT_AUTHORIZE
+        val redirectUri = oauthRedirectUri
+        val parameters = HashMap<String, String>()
+        parameters["client_id"] = client.id
+        parameters["redirect_uri"] = redirectUri
+        parameters["response_type"] = "code"
+        parameters["scope"] = OAUTH_SCOPES
+        val url = getValidDomain() + endpoint + "?" + toQueryString(parameters)
+        val uri = Uri.parse(url)
+
+        val intent = Intent(Intent.ACTION_VIEW, uri)
+        if (intent.resolveActivity(packageManager) != null) {
+            startActivity(intent)
+            return true
+        }
+        return false
     }
 
 }

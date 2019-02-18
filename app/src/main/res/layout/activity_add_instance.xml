@@ -45,7 +45,16 @@
 					android:layout_height="wrap_content"
 					android:layout_marginTop="16dp"
 					android:text="@string/add_instance"
-					android:textStyle="bold"/>
+					android:textStyle="bold"
+					android:onClick="onButtonClick"/>
+
+			<ProgressBar
+					android:id="@+id/progress"
+					android:layout_width="wrap_content"
+					android:layout_height="wrap_content"
+					android:padding="16dp"
+					android:layout_gravity="center"
+					android:visibility="invisible"/>
 
 		</LinearLayout>
 	</ScrollView>

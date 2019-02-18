@@ -3,9 +3,10 @@ package bleakgrey.obscura.activities
 import android.os.Bundle
 import com.google.android.material.snackbar.Snackbar
 import androidx.appcompat.app.AppCompatActivity;
-import android.view.Menu
-import android.view.MenuItem
+import bleakgrey.obscura.Prefs
 import bleakgrey.obscura.R
+import bleakgrey.obscura.api.Client
+import bleakgrey.obscura.api.FederationAPI
 
 import kotlinx.android.synthetic.main.activity_main.*
 
@@ -22,15 +23,4 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
-    override fun onCreateOptionsMenu(menu: Menu): Boolean {
-        menuInflater.inflate(R.menu.menu_main, menu)
-        return true
-    }
-
-    override fun onOptionsItemSelected(item: MenuItem): Boolean {
-        return when (item.itemId) {
-            R.id.action_settings -> true
-            else -> super.onOptionsItemSelected(item)
-        }
-    }
 }

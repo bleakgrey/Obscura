@@ -7,8 +7,8 @@ import android.os.IBinder
 class AuthenticatorService : Service() {
 
     override fun onBind(intent: Intent): IBinder {
-        val authenticator = AppAuthenticator(this)
-        return authenticator.getIBinder()
+        val authenticator = Authenticator(this)
+        return authenticator.iBinder
     }
 
 }
