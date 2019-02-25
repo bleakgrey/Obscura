@@ -9,4 +9,10 @@
 
 	<string name="add_instance">Add Instance</string>
 	<string name="instance_url">Instance URL</string>
+
+	<string name="timeline_home">Home</string>
+	<string name="timeline_public">Public</string>
+	<string name="timeline_local">Local</string>
+	<string name="add_timeline">Add Timeline</string>
+	<string name="discover">Discover</string>
 </resources>

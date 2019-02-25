@@ -26,12 +26,13 @@ class Prefs(val ctx: Context,
         return Client(id, secret, domain)
     }
 
-    fun saveAuthClient(client: Client = Client("", "", "")) {
+    fun saveAuthClient(client: Client = Client("", "", "")) : Client {
         prefs.edit {
             putString(CLIENT_ID, client.id)
             putString(CLIENT_SECRET, client.secret)
             putString(DOMAIN, client.domain)
         }
+        return getAuthClient()
     }
 
 }

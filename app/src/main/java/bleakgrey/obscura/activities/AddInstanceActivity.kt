@@ -40,7 +40,7 @@ class AddInstanceActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_add_instance)
-        instance.setText("fosstodon.org")
+        instance.setText("mastodon.social")
     }
 
     override fun onStop() {
@@ -78,7 +78,6 @@ class AddInstanceActivity : AppCompatActivity() {
             domain = getValidDomain()
             api = FederationAPI.create(domain)
 
-            Log.i("AUTH", "Registering client")
             client = registerClient()
             if (client.empty) {
                 error("No client received")
@@ -104,17 +103,20 @@ class AddInstanceActivity : AppCompatActivity() {
         if(error != null)
             return setError("Auth fail: $error")
 
+        Log.i("AUTH", "Error response: ${error}")
+        Log.i("AUTH", "Fetching token")
         val token = api.fetchOAuthToken(domain, client.id, client.secret, oauthRedirectUri, code!!).await()
         if(token.data.isEmpty())
             return setError("No token received")
 
-        Log.i("AUTH", "Testing received token")
+        Log.i("AUTH", "Testing token")
         val accessToken = token.data
         api = FederationAPI.create(domain, accessToken)
         val profile = api.getSelfProfile().await()
 
         Log.i("AUTH", "Token is valid")
         InstanceManager(this).saveInstance(domain, accessToken, profile)
+        client = Prefs(this).saveAuthClient()
         val intent = Intent(this, MainActivity::class.java)
         startActivity(intent)
     }
@@ -124,8 +126,10 @@ class AddInstanceActivity : AppCompatActivity() {
         return if(!client.empty) {
             Log.i("AUTH", "Using cached client data")
             client
-        } else
+        } else {
+            Log.i("AUTH", "Registering client")
             api.registerClient(domain, getString(R.string.app_name), oauthRedirectUri, OAUTH_SCOPES, "").await()
+        }
     }
 
     //TODO: Do something with this
