@@ -3,10 +3,10 @@ package bleakgrey.obscura.activities
 import android.accounts.Account
 import android.os.Bundle
 import android.util.Log
-import android.view.View
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.lifecycle.Observer
 import bleakgrey.obscura.R
+import bleakgrey.obscura.accounts.InstanceAccount
 import bleakgrey.obscura.accounts.InstanceManager
 import com.mikepenz.materialdrawer.AccountHeader
 import com.mikepenz.materialdrawer.AccountHeaderBuilder
@@ -15,7 +15,6 @@ import kotlinx.android.synthetic.main.activity_main.*
 import com.mikepenz.materialdrawer.DrawerBuilder
 import com.mikepenz.materialdrawer.model.DividerDrawerItem
 import com.mikepenz.materialdrawer.model.PrimaryDrawerItem
-import com.mikepenz.materialdrawer.model.interfaces.IProfile
 import com.mikepenz.materialdrawer.model.ProfileDrawerItem
 import com.mikepenz.materialdrawer.model.SecondaryDrawerItem
 
@@ -47,9 +46,10 @@ class MainActivity : AppCompatActivity() {
 
         accountHeader = AccountHeaderBuilder()
             .withActivity(this)
-            .withOnAccountHeaderListener {
-                    v, profile, currentProfile -> onProfileChanged(v, profile, currentProfile)
-            }
+            .withOnAccountHeaderListener(AccountHeader.OnAccountHeaderListener { view, profile, current ->
+                onInstanceSwitched(0)
+                return@OnAccountHeaderListener false
+            })
             .build()
 
         drawer = DrawerBuilder()
@@ -66,7 +66,7 @@ class MainActivity : AppCompatActivity() {
             ))
             .build()
 
-        InstanceManager(this).getInstances().observe(this, Observer<List<Account>> { data ->
+        InstanceManager(this).getInstances().observe(this, Observer<List<InstanceAccount>> { data ->
             onInstancesUpdated(data)
         })
 
@@ -76,18 +76,18 @@ class MainActivity : AppCompatActivity() {
 //        }
     }
 
-    private fun onProfileChanged(view: View, profile: IProfile<*>, currentProfile: Boolean): Boolean {
-        return false
+    private fun onInstanceSwitched(id: Int) {
+
     }
 
-    private fun onInstancesUpdated(instances: List<Account>) {
+    private fun onInstancesUpdated(instances: List<InstanceAccount>) {
         Log.i("MAIN", "UPD INSTANCES")
         accountHeader.clear()
         instances.forEach {
             accountHeader.addProfile(ProfileDrawerItem()
-                .withName(it.name)
-                .withEmail(it.name)
-                .withIcon("https://i.ytimg.com/vi/gOjlDGU5rE4/hqdefault.jpg?sqp=-oaymwEiCKgBEF5IWvKriqkDFQgBFQAAAAAYASUAAMhCPQCAokN4AQ==&rs=AOn4CLAs-BkhyBbYWLtQ9Es_Ucc_W3sQ-A")
+                .withName(it.displayName)
+                .withEmail(it.handle)
+                .withIcon(it.avatar)
             , 0)
         }
     }

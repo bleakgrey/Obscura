@@ -2,10 +2,10 @@ package bleakgrey.obscura.accounts
 
 import android.accounts.Account
 import android.accounts.AccountManager
-import android.accounts.OnAccountsUpdateListener
 import android.content.Context
 import android.util.Log
 import androidx.lifecycle.MutableLiveData
+import bleakgrey.obscura.Application
 import bleakgrey.obscura.R
 import bleakgrey.obscura.api.Profile
 
@@ -15,9 +15,9 @@ class InstanceManager(private val ctx: Context) {
 
     companion object {
         private var watching: Boolean = false
-        private var instances = mutableListOf<Account>()
-        private val data: MutableLiveData<List<Account>> by lazy {
-            MutableLiveData<List<Account>>()
+        private var instances = mutableListOf<InstanceAccount>()
+        private val data: MutableLiveData<List<InstanceAccount>> by lazy {
+            MutableLiveData<List<InstanceAccount>>()
         }
 
         private fun updated(accounts: Array<out Account>?) {
@@ -25,7 +25,12 @@ class InstanceManager(private val ctx: Context) {
             if(accounts == null)
                 return
 
-            instances.addAll(accounts)
+            val manager = AccountManager.get(Application.ctx)
+            accounts.forEach {
+                val acc = InstanceAccount(it, manager)
+                instances.add(acc)
+            }
+
             data.value = instances
         }
     }
@@ -33,22 +38,19 @@ class InstanceManager(private val ctx: Context) {
     init {
         if(!watching) {
             Log.i("INSTANCES", "Watching account changes")
-            manager.addOnAccountsUpdatedListener({
-                    accounts -> updated(accounts)
-            }, null, true)
+            manager.addOnAccountsUpdatedListener({ accounts -> updated(accounts) }, null, true)
             watching = true
         }
     }
 
-    fun getInstances() : MutableLiveData<List<Account>> {
+    fun getInstances() : MutableLiveData<List<InstanceAccount>> {
         return data
     }
 
     fun saveInstance(domain: String, token: String, profile: Profile) {
-        val prettyDomain = domain.replace("https://","").replace("/","")
-        val prettyName = "@${profile.username}@${prettyDomain}"
-        val account = Account(prettyName, ctx.getString(R.string.account_type))
-        manager.addAccountExplicitly(account, "", null)
+        val data = InstanceAccount.describe(domain, token, profile)
+        val account = Account(data.getString(InstanceAccount.PARAM_HANDLE), ctx.getString(R.string.account_type))
+        manager.addAccountExplicitly(account, "", data)
         manager.setAuthToken(account, ctx.getString(R.string.account_token_type), token)
     }
 

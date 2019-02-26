@@ -4,8 +4,8 @@ import com.google.gson.annotations.SerializedName
 
 data class Profile(
     val id: String,
-    @SerializedName("username") val localUsername: String,
-    @SerializedName("acct") val username: String,
+    @SerializedName("username") val username: String,
+    @SerializedName("acct") val acct: String,
     @SerializedName("display_name") val displayName: String,
     val note: String,
     val url: String,

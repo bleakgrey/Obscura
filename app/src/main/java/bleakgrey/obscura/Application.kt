@@ -1,6 +1,7 @@
 package bleakgrey.obscura
 
 import android.app.Application
+import android.content.Context
 import com.mikepenz.materialdrawer.util.DrawerImageLoader
 import android.graphics.drawable.Drawable
 import android.net.Uri
@@ -10,8 +11,13 @@ import com.mikepenz.materialdrawer.util.AbstractDrawerImageLoader
 
 class Application : Application() {
 
+    companion object {
+        lateinit var ctx: Context
+    }
+
     override fun onCreate() {
         super.onCreate()
+        ctx = this
 
         // Used to load images into MaterialDrawer
         DrawerImageLoader.init(object : AbstractDrawerImageLoader() {
