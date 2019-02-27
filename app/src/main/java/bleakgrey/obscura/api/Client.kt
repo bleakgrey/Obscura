@@ -6,7 +6,7 @@ data class Client (
 
     @SerializedName("client_id") val id: String,
     @SerializedName("client_secret") val secret: String,
-    val domain: String
+    var domain: String? = ""
 
 ) {
 

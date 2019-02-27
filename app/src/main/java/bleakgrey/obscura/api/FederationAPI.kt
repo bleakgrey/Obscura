@@ -20,13 +20,13 @@ interface FederationAPI {
 
         // This header is only used to know which requests require access token
         // It will should never be passed to the server
-        const val HEADER_TOKEN_INJECTION = "X-HeyMateInjectAccessToken4Me"
+        const val HEADER_TOKEN_INJECTION = "X-HeyMate-InjectAccessToken4Me"
         private const val HEADER_TOKEN_REQUIRED = "$HEADER_TOKEN_INJECTION: Pls"
 
         fun create(domain: String, token: String = "lolwhattoken"): FederationAPI {
             val tokenInjector = TokenInjectInterceptor(token)
             val logger = HttpLoggingInterceptor(HttpLoggingInterceptor.Logger {
-                Log.d("API", it)
+                Log.i("API", it)
             })
             logger.level = HttpLoggingInterceptor.Level.BASIC
 
@@ -68,5 +68,15 @@ interface FederationAPI {
     @Headers(HEADER_TOKEN_REQUIRED)
     @GET("api/v1/accounts/verify_credentials")
     fun getSelfProfile(): Deferred<Profile>
+
+    @Headers(HEADER_TOKEN_REQUIRED)
+    @GET("api/v1/timelines/{timeline}")
+    fun requestTimeline(
+        @Path("timeline") timeline: String,
+        @QueryMap params: Map<String, String> = HashMap()
+//        @Query("max_id") maxId: String,
+//        @Query("since_id") sinceId: String,
+//        @Query("limit") limit: Int?
+    ): Deferred<List<Status>>
 
 }

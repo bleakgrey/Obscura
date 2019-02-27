@@ -18,7 +18,6 @@ import kotlinx.coroutines.NonCancellable.cancel
 
 class AddInstanceActivity : AppCompatActivity() {
 
-    private var domain: String = ""
     private lateinit var client: Client
     private lateinit var api: FederationAPI
 
@@ -51,13 +50,20 @@ class AddInstanceActivity : AppCompatActivity() {
     override fun onStart() {
         super.onStart()
         client = Prefs(this).getAuthClient()
+        if (client.domain != null && client.domain != "")
+            instance.setText(client.domain)
+
         val uri = intent.data
         if (uri != null && uri.toString().startsWith(oauthRedirectUri))
             CoroutineScope(Dispatchers.Main).launch { requestToken(uri) }
     }
 
     private fun getValidDomain(): String {
-        return "https://" + instance.text.toString()
+        Log.i("ffff", client.toString())
+        return if(!client.empty && client.domain != null && client.domain != "")
+            client.domain!!
+        else
+            "https://" + instance.text.toString() + "/"
     }
 
     private fun setProgress(working: Boolean) {
@@ -74,8 +80,7 @@ class AddInstanceActivity : AppCompatActivity() {
     fun onButtonClick(v: View) {
         CoroutineScope(Dispatchers.Main).launch {
             setProgress(true)
-            domain = getValidDomain()
-            api = FederationAPI.create(domain)
+            api = FederationAPI.create(getValidDomain())
 
             client = registerClient()
             if (client.empty) {
@@ -92,7 +97,7 @@ class AddInstanceActivity : AppCompatActivity() {
     private suspend fun requestToken(uri: Uri) {
         setProgress(true)
 
-        domain = getValidDomain()
+        val domain = getValidDomain()
         api = FederationAPI.create(domain)
         var error = uri.getQueryParameter("error")
         val code = uri.getQueryParameter("code")
@@ -123,13 +128,13 @@ class AddInstanceActivity : AppCompatActivity() {
     }
 
     private suspend fun registerClient(): Client {
-        val client = Prefs(this).getAuthClient()
+        client = Prefs(this).getAuthClient()
         return if(!client.empty) {
             Log.i("AUTH", "Using cached client data")
             client
         } else {
             Log.i("AUTH", "Registering client")
-            api.registerClient(domain, getString(R.string.app_name), oauthRedirectUri, OAUTH_SCOPES, "").await()
+            api.registerClient(client.domain!!, getString(R.string.app_name), oauthRedirectUri, OAUTH_SCOPES, "").await()
         }
     }
 
@@ -148,6 +153,9 @@ class AddInstanceActivity : AppCompatActivity() {
     }
 
     private fun openAuthorizationURI(): Boolean {
+        client.domain = getValidDomain()
+        Prefs(this).saveAuthClient(client)
+
         val endpoint = FederationAPI.ENDPOINT_AUTHORIZE
         val redirectUri = oauthRedirectUri
         val parameters = HashMap<String, String>()

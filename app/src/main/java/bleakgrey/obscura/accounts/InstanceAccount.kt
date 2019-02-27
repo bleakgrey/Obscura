@@ -3,6 +3,7 @@ package bleakgrey.obscura.accounts
 import android.accounts.Account
 import android.accounts.AccountManager
 import android.os.Bundle
+import bleakgrey.obscura.api.FederationAPI
 import bleakgrey.obscura.api.Profile
 
 class InstanceAccount(account: Account, manager: AccountManager) {
@@ -29,11 +30,13 @@ class InstanceAccount(account: Account, manager: AccountManager) {
         }
     }
 
-    //private var token: String = manager.getUserData(account, PARAM_TOKEN)
-    val domain: String = manager.getUserData(account, PARAM_DOMAIN)
+    private val token: String = manager.getUserData(account, PARAM_TOKEN)
+    private val domain: String = manager.getUserData(account, PARAM_DOMAIN)
     val handle: String = manager.getUserData(account, PARAM_HANDLE)
     val displayName: String = manager.getUserData(account, PARAM_DISPLAY_NAME)
     val avatar: String = manager.getUserData(account, PARAM_AVATAR)
     val type: String = manager.getUserData(account, PARAM_INSTANCE_TYPE)
+
+    val api = FederationAPI.create(domain, token)
 
 }

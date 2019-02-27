@@ -13,17 +13,19 @@ import bleakgrey.obscura.api.Profile
 
 class InstanceManager(private val ctx: Context) {
 
+    private val TAG = "InstanceManager"
     private val manager = AccountManager.get(ctx)
     private val prefs = Prefs(ctx).prefs
 
     companion object {
         private var watching: Boolean = false
+        private var sentActive: Boolean = false
         private var instances = mutableListOf<InstanceAccount>()
         private val liveInstances: MutableLiveData<List<InstanceAccount>> by lazy {
             MutableLiveData<List<InstanceAccount>>()
         }
-        private val liveActive: MutableLiveData<InstanceAccount> by lazy {
-            MutableLiveData<InstanceAccount>()
+        private val liveActive: MutableLiveData<InstanceAccount?> by lazy {
+            MutableLiveData<InstanceAccount?>()
         }
 
         private fun updated(accounts: Array<out Account>?) {
@@ -35,17 +37,19 @@ class InstanceManager(private val ctx: Context) {
                 }
             }
             liveInstances.value = instances
+
+            if(!sentActive && instances.isNotEmpty()) {
+                val activeId = Prefs(Application.ctx).prefs.getInt(Prefs.ACTIVE_INSTANCE, 0)
+                liveActive.value = instances[activeId]
+                sentActive = true
+            }
         }
     }
 
     init {
         if(!watching) {
-            Log.i("InstanceManager", "Watching account changes")
             manager.addOnAccountsUpdatedListener({ accounts -> updated(accounts) }, null, true)
             watching = true
-
-            val activeId = prefs.getInt(Prefs.ACTIVE_INSTANCE, 0)
-            liveActive.value = this.getList().value!![activeId]
         }
     }
 
@@ -53,7 +57,7 @@ class InstanceManager(private val ctx: Context) {
         return liveInstances
     }
 
-    fun getActive(): MutableLiveData<InstanceAccount>{
+    fun getActive(): MutableLiveData<InstanceAccount?>{
         return liveActive
     }
 
@@ -65,12 +69,12 @@ class InstanceManager(private val ctx: Context) {
         }
 
         when (newCurrent) {
-            null -> Log.e("InstanceManager", "Can't switch to unknown instance: ${desiredHandle}")
+            null -> Log.e(TAG, "Can't switch to unknown instance: ${desiredHandle}")
             else -> {
                 prefs.edit {
                     putInt(Prefs.ACTIVE_INSTANCE, liveInstances.value!!.indexOf(newCurrent!!))
                 }
-                Log.i("InstanceManager", "Switching to ${newCurrent!!.handle}")
+                Log.i(TAG, "Switching to ${newCurrent!!.handle}")
                 liveActive.value = newCurrent
             }
         }

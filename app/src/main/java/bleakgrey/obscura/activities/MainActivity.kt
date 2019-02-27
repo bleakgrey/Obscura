@@ -7,6 +7,7 @@ import androidx.lifecycle.Observer
 import bleakgrey.obscura.R
 import bleakgrey.obscura.accounts.InstanceAccount
 import bleakgrey.obscura.accounts.InstanceManager
+import bleakgrey.obscura.fragments.TimelineFragment
 import com.mikepenz.materialdrawer.AccountHeader
 import com.mikepenz.materialdrawer.AccountHeaderBuilder
 import com.mikepenz.materialdrawer.Drawer
@@ -19,8 +20,7 @@ import com.mikepenz.materialdrawer.model.SecondaryDrawerItem
 
 class MainActivity : AppCompatActivity() {
 
-    private val instances: InstanceManager = InstanceManager(this)
-    private lateinit var instance: InstanceAccount
+    private lateinit var instances: InstanceManager
     private lateinit var drawer: Drawer
     private lateinit var accountHeader: AccountHeader
 
@@ -67,21 +67,25 @@ class MainActivity : AppCompatActivity() {
             ))
             .build()
 
+        instances = InstanceManager(this)
         instances.getList().observe(this, Observer<List<InstanceAccount>> { data ->
             onInstancesUpdated(data)
         })
-        instances.getActive().observe(this, Observer<InstanceAccount> { data ->
-            onInstanceSwitched(data)
-        })
+
+        val fragment = TimelineFragment.create("home")
+        val transaction = supportFragmentManager.beginTransaction()
+        transaction.replace(R.id.content, fragment)
+        transaction.commit()
+
+//        val active = instances.getActive().value
+//        if (active != null) {
+//            instances.switchTo(active.handle)
+//        }
 
 //        fab.setOnClickListener { view ->
 //            Snackbar.make(view, "Replace with your own action", Snackbar.LENGTH_LONG)
 //                .setAction("Action", null).show()
 //        }
-    }
-
-    private fun onInstanceSwitched(newInstance: InstanceAccount) {
-        instance = newInstance
     }
 
     private fun onInstancesUpdated(instances: List<InstanceAccount>) {
