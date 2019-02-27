@@ -112,8 +112,11 @@ class AddInstanceActivity : AppCompatActivity() {
         api = FederationAPI.create(domain, accessToken)
         val profile = api.getSelfProfile().await()
 
+        //TODO: Probe instance to determine its type
+        val type = "generic"
+
         Log.i("AUTH", "Token is valid")
-        InstanceManager(this).save(domain, accessToken, profile)
+        InstanceManager(this).save(domain, accessToken, profile, type)
         client = Prefs(this).saveAuthClient()
         val intent = Intent(this, MainActivity::class.java)
         startActivity(intent)

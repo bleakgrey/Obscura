@@ -76,8 +76,8 @@ class InstanceManager(private val ctx: Context) {
         }
     }
 
-    fun save(domain: String, token: String, profile: Profile) {
-        val data = InstanceAccount.describe(domain, token, profile)
+    fun save(domain: String, token: String, profile: Profile, type: String) {
+        val data = InstanceAccount.describe(domain, token, profile, type)
         val account = Account(data.getString(InstanceAccount.PARAM_HANDLE), ctx.getString(R.string.account_type))
         manager.addAccountExplicitly(account, "", data)
         manager.setAuthToken(account, ctx.getString(R.string.account_token_type), token)
