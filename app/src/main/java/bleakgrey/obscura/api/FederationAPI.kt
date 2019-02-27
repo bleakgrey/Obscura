@@ -19,9 +19,9 @@ interface FederationAPI {
         const val ENDPOINT_AUTHORIZE = "/oauth/authorize"
 
         // This header is only used to know which requests require access token
-        // It will never be passed to the server
+        // It will should never be passed to the server
         const val HEADER_TOKEN_INJECTION = "X-HeyMateInjectAccessToken4Me"
-        private const val INJECT_TOKEN = "$HEADER_TOKEN_INJECTION: Pls"
+        private const val HEADER_TOKEN_REQUIRED = "$HEADER_TOKEN_INJECTION: Pls"
 
         fun create(domain: String, token: String = "lolwhattoken"): FederationAPI {
             val tokenInjector = TokenInjectInterceptor(token)
@@ -65,7 +65,7 @@ interface FederationAPI {
         @Field("website") website: String
     ): Deferred<Client>
 
-    @Headers(INJECT_TOKEN)
+    @Headers(HEADER_TOKEN_REQUIRED)
     @GET("api/v1/accounts/verify_credentials")
     fun getSelfProfile(): Deferred<Profile>
 

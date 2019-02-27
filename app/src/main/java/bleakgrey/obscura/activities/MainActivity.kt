@@ -1,6 +1,5 @@
 package bleakgrey.obscura.activities
 
-import android.accounts.Account
 import android.os.Bundle
 import android.util.Log
 import androidx.appcompat.app.AppCompatActivity;
@@ -20,6 +19,8 @@ import com.mikepenz.materialdrawer.model.SecondaryDrawerItem
 
 class MainActivity : AppCompatActivity() {
 
+    private val instances: InstanceManager = InstanceManager(this)
+    private lateinit var instance: InstanceAccount
     private lateinit var drawer: Drawer
     private lateinit var accountHeader: AccountHeader
 
@@ -47,7 +48,7 @@ class MainActivity : AppCompatActivity() {
         accountHeader = AccountHeaderBuilder()
             .withActivity(this)
             .withOnAccountHeaderListener(AccountHeader.OnAccountHeaderListener { view, profile, current ->
-                onInstanceSwitched(0)
+                instances.switchTo(profile.email.toString())
                 return@OnAccountHeaderListener false
             })
             .build()
@@ -66,8 +67,11 @@ class MainActivity : AppCompatActivity() {
             ))
             .build()
 
-        InstanceManager(this).getInstances().observe(this, Observer<List<InstanceAccount>> { data ->
+        instances.getList().observe(this, Observer<List<InstanceAccount>> { data ->
             onInstancesUpdated(data)
+        })
+        instances.getActive().observe(this, Observer<InstanceAccount> { data ->
+            onInstanceSwitched(data)
         })
 
 //        fab.setOnClickListener { view ->
@@ -76,8 +80,8 @@ class MainActivity : AppCompatActivity() {
 //        }
     }
 
-    private fun onInstanceSwitched(id: Int) {
-
+    private fun onInstanceSwitched(newInstance: InstanceAccount) {
+        instance = newInstance
     }
 
     private fun onInstancesUpdated(instances: List<InstanceAccount>) {

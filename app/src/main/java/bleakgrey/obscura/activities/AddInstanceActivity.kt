@@ -40,7 +40,6 @@ class AddInstanceActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_add_instance)
-        instance.setText("mastodon.social")
     }
 
     override fun onStop() {
@@ -103,7 +102,6 @@ class AddInstanceActivity : AppCompatActivity() {
         if(error != null)
             return setError("Auth fail: $error")
 
-        Log.i("AUTH", "Error response: ${error}")
         Log.i("AUTH", "Fetching token")
         val token = api.fetchOAuthToken(domain, client.id, client.secret, oauthRedirectUri, code!!).await()
         if(token.data.isEmpty())
@@ -115,7 +113,7 @@ class AddInstanceActivity : AppCompatActivity() {
         val profile = api.getSelfProfile().await()
 
         Log.i("AUTH", "Token is valid")
-        InstanceManager(this).saveInstance(domain, accessToken, profile)
+        InstanceManager(this).save(domain, accessToken, profile)
         client = Prefs(this).saveAuthClient()
         val intent = Intent(this, MainActivity::class.java)
         startActivity(intent)

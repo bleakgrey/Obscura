@@ -2,18 +2,21 @@ package bleakgrey.obscura
 
 import android.content.Context
 import androidx.core.content.edit
+import bleakgrey.obscura.accounts.InstanceAccount
+import bleakgrey.obscura.accounts.InstanceManager
 import bleakgrey.obscura.api.Client
 
-class Prefs(val ctx: Context,
-            val key: String = BuildConfig.APPLICATION_ID) {
+class Prefs(ctx: Context,
+            key: String = BuildConfig.APPLICATION_ID) {
+
+    val prefs = ctx.applicationContext.getSharedPreferences(key, Context.MODE_PRIVATE)
 
     companion object {
         private val CLIENT_ID = "client_id"
         private val CLIENT_SECRET = "client_secret"
         private val DOMAIN = "domain"
+        const val ACTIVE_INSTANCE = "active_instance"
     }
-
-    private val prefs = ctx.applicationContext.getSharedPreferences(key, Context.MODE_PRIVATE)
 
 
 

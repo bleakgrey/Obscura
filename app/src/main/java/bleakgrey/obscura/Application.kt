@@ -7,6 +7,7 @@ import android.graphics.drawable.Drawable
 import android.net.Uri
 import com.bumptech.glide.Glide
 import android.widget.ImageView
+import bleakgrey.obscura.accounts.InstanceManager
 import com.mikepenz.materialdrawer.util.AbstractDrawerImageLoader
 
 class Application : Application() {
